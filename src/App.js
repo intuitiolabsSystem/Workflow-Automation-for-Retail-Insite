@@ -62,21 +62,23 @@ Manual coordination across disconnected systems is consuming broker and staff ti
 
 All three modules share one core principle: AI drafts or automates the work, but a human approves before anything is sent, posted, or finalized. No autonomous actions are taken without broker or finance review.
 
-The three modules run on a shared automation platform with a shared data normalization layer. The foundation built for Module 1 is reused for Modules 2 and 3, reducing total cost and complexity.
+The three modules run on a shared automation platform with a shared data normalization layer. The foundation built for all modules is non-negotiable shared infrastructure (Weeks 1–3) that underpins everything.
 
 
 --- MODULE 1: AI PROPERTY INQUIRY RESPONSE ---
 Status: CONFIRMED FEASIBLE — Ready to build
 
-Purpose: Reduce time spent researching properties and drafting responses to inbound inquiry emails.
+Purpose: Draft accurate, property-specific responses to inbound inquiries, reducing manual research and drafting.
 
 What it does:
 - Monitors the Outlook inbox for inbound property inquiry emails
 - Identifies the property mentioned in the inquiry
-- Retrieves property and deal info from the Retail Insite website and Dynamics CRM
+- Retrieves property and deal information from the Retail Insite website and Dynamics CRM
 - Generates a draft email response with source-attributed property facts
-- Routes the draft to the broker for review, editing, and approval in Outlook
-- The broker sends the email — nothing is auto-sent
+- Broker reviews, edits if needed, and approves before sending
+
+Key implementation detail:
+- Brokers never leave Outlook — the draft appears directly in their inbox via Microsoft 365 Graph API + Outlook add-in
 
 Guardrails and controls:
 - Draft-first: no auto-send in the initial phase
@@ -90,104 +92,123 @@ Investment: 269 hours | $18,292
 
 
 --- MODULE 2: INVOICE PROCESSING AUTOMATION ---
-Status: PENDING ACCOUNTING VENDOR SELECTION — estimate is a placeholder
+Status: PENDING ACCOUNTING VENDOR SELECTION — estimate shown, architecture finalized after vendor confirmed
 
-Purpose: Eliminate manual re-entry of deal data into accounting systems and reduce errors.
+Purpose: Replace manual CRM → Excel → accounting re-entry workflow with automated drafting and finance approval.
 
-What it does:
-- Pulls deal data directly from Dynamics CRM
-- Normalizes and standardizes deal information
-- Generates an invoice draft including reconciliation notes and commission splits
-- Routes the invoice draft to finance for review and approval
-- Posts the approved invoice to the accounting platform after sign-off
-- Maintains a full audit log of the invoice lifecycle
+What it does — two input methods supported:
+1. Deal data pulled directly from Dynamics CRM, OR
+2. Excel file drop — system normalizes the data automatically
+
+Both methods result in:
+- A generated invoice draft including reconciliation notes and commission split handling
+- Routing of the draft to finance for review and approval
+- Posting to the accounting platform only upon sign-off
+- A full audit log maintained for the invoice lifecycle
+
+Built to Flex (important):
+- The system uses an accounting integration layer — it is not hardwired to QuickBooks
+- If Retail Insite moves to Ramp or another platform, only the connector changes; the core logic and effort difference is minimal
 
 Key complexity handled:
 - Nuanced commission splits: inside/outside brokers, payment timing, multiple deal details per transaction
 
 Controls:
 - Human approval required before any accounting system posting
-- Full audit log maintained throughout
+- Full audit log + error handling
+- Excel ingestion validation ensures data completeness before invoice generation
+- Reconciliation notes included with every draft
 
-Dependency: Final architecture depends on accounting vendor selection. Possible move from QuickBooks to Ramp or an equivalent. The $22,508 figure is a placeholder until vendor decision is confirmed.
-
-Investment: 331 hours | $22,508 (placeholder — pending vendor confirmation)
+Investment: 331 hours | $22,508
 
 
 --- MODULE 3: LOI DRAFT ASSISTANT ---
 Status: CONFIRMED FEASIBLE — Ready to build
 
-Purpose: Reduce time spent converting handwritten LOI and lease edits into editable digital drafts.
+Purpose: Reduce time spent converting broker edits into a usable digital LOI/lease draft.
 
-What it does:
-- Ingests handwritten broker markups on LOIs and lease documents (scanned or photographed)
-- Uses AI to read and interpret the handwriting and annotations
-- Generates an initial digital draft incorporating the broker's changes
-- Routes the draft to the broker for review, editing, and export
+Two supported input methods:
+
+1) Handwritten OCR:
+- Broker uploads a scan or photo of their marked-up LOI/lease document
+- System extracts handwritten annotations using OCR, maps changes to relevant clauses
+- Generates an updated digital draft for broker review
+
+2) Voice Dictation:
+- Broker uploads the LOI/lease document and records voice instructions describing the required changes (e.g. "change lease term to 7 years")
+- Speech-to-text converts instructions into structured document updates
+- System generates a revised draft incorporating those changes
+
+Output for both methods:
+- Broker reviews the generated draft, edits if needed, and exports as PDF or DOCX
 
 Key adoption insight:
 - 8–9 of 13 brokers use the handwriting workflow and will not change their behavior
 - The solution is designed to "meet brokers where they are" — no behavior change required
-- AI creates the initial draft; humans handle the nuance: exhibit placement, complex formatting, clause decisions
+- AI handles the tedious initial draft; humans handle the nuance: exhibit placement, complex formatting, clause decisions
 - Currently supported by virtual assistants in the Philippines — this module significantly reduces that workload
 
 Note: Retail Insite previously attempted handwriting-to-text with Claude directly and had limited success. The LOI Draft Assistant is purpose-built for their workflow, using their own letterhead and document templates so the AI has structured context — significantly improving accuracy over ad-hoc attempts.
 
-Investment: 245 hours | $16,660
+Investment: 432 hours | $29,376
 
 
 == SHARED ARCHITECTURE ==
 
-Architecture layers (high-level):
-1. Integration & external sources: API connectors/webhooks → LoopNet, Outlook, Dynamics CRM, Retail Insite website
-2. Automation workflow engine: inquiry response agent, invoice automation engine, LOI draft assistant
-3. AI processing layer: intent detection + draft generation (shared LLM infrastructure)
-4. Human review layer: broker review interface + finance review interface
-5. Output systems: Outlook (emails), accounting platform (QuickBooks or equivalent), LOI/Lease PDFs
+The automation platform is shared across all three modules, with a data normalization layer that standardizes property and deal data before AI processing.
 
-A shared data normalization layer standardizes deal and property data before AI processing.
+Architecture layers (high-level):
+1. Integration & external sources: API connectors + webhooks → LoopNet, Outlook, Dynamics CRM, Retail Insite website
+2. Automation workflow engine: Inquiry Response Agent · Invoice Automation Engine · LOI Draft Assistant
+3. AI processing layer: Intent Detection · Draft Generation (shared LLM infrastructure)
+4. Human review layer: Broker Review Interface · Finance Review Interface
+5. Output systems: Outlook (emails) · QuickBooks or equivalent (invoices) · LOI/Lease PDFs
 
 
 == GUARDRAILS, GOVERNANCE & CONTROLS ==
 
 Human-in-the-loop policy (non-negotiable for Phase 1):
-- Emails are never sent without explicit broker approval
-- Invoices are never posted without explicit finance approval
-- LOI drafts are reviewed and edited by brokers before use or export
+- No outbound email is sent without broker approval
+- No invoice or accounting entry is posted without finance team approval
+- LOI/lease drafts are generated as initial drafts; brokers review, edit, and decide the final output
 
 Draft-first policy (inquiry module): Initial rollout is draft-only with a 2–3 month feedback period before considering any auto-send behavior.
 
-Audit logging (invoice module): Full audit trail maintained for the entire invoice lifecycle.
+Audit logging (invoice module): Full audit trail maintained for the entire invoice lifecycle, with reconciliation notes on every draft showing what data was pulled and from where. Excel ingestion validation ensures data completeness before invoice generation begins.
 
 
 == IMPLEMENTATION OPTIONS ==
 
 Option A — Embedded Automation (RECOMMENDED):
-Automation integrated directly into existing tools (Outlook + Dynamics CRM).
-- Pros: Minimal workflow disruption, faster adoption, no new tools to learn
-- Cons: Less centralized visibility; analytics distributed across systems
+Automation integrated directly into existing tools (Outlook + Dynamics CRM). Brokers work in familiar interfaces.
+- Pros: Minimal workflow disruption, faster adoption, no new tools to learn, work occurs in familiar environments
+- Cons: Limited centralized visibility; analytics distributed across systems
 
 Option B — Operations Console (Future State):
-A centralized dashboard to review and manage AI-generated tasks across all three modules.
-- Pros: Centralized visibility, consistent approval workflows, easier reporting
-- Cons: Requires adopting a new internal tool; change management and onboarding required
+A centralized dashboard to review and manage AI-generated tasks across all three modules (unified task queue).
+- Pros: Centralized visibility across modules, consistent approval processes, easier reporting and analytics
+- Cons: Requires adopting a new internal tool; change management and onboarding effort
 
 Recommendation: Start with Embedded Automation. Introduce the Operations Console later once adoption is established.
 
 
 == INVESTMENT SUMMARY ==
 
+Platform Foundation (Weeks 1–3, shared across all modules): $15,980
 Module 1 — AI Inquiry Response: 269 hours | $18,292
-Module 2 — Invoice Automation: 331 hours | $22,508 (placeholder, pending vendor confirmation)
-Module 3 — LOI Draft Assistant: 245 hours | $16,660
-Total shown in proposal: ~$73,000
+Module 2 — Invoice Automation: 331 hours | $22,508
+Module 3 — LOI Draft Assistant: 432 hours | $29,376
+Total Investment: ~$86,000
 
-Note: Module 2 is a placeholder. The ~$73K total reflects all three modules combined.
+How the total reconciles:
+- Modules subtotal: $18,292 + $22,508 + $29,376 = $70,176
+- Platform Foundation: $15,980
+- Grand total: $86,156 → shown as ~$86K in the deck
 
 
 == TIMELINE & DELIVERY ==
 
-Weeks 1–3 — Foundation Period (non-negotiable, shared across all modules):
+Weeks 1–3 — Platform Foundation (non-negotiable, shared across all modules):
 - Authentication and access control
 - Workflow engine
 - AI orchestration layer
@@ -197,14 +218,14 @@ Weeks 1–3 — Foundation Period (non-negotiable, shared across all modules):
 After Week 3, client chooses one of two delivery paths:
 
 Option A — Parallel Execution (Faster):
-- Week 4+: Module 1 and Module 3 start simultaneously
+- All three modules built simultaneously by dedicated workstreams
 - Estimated completion: approximately Week 8 from kickoff
-- Module 2 starts after accounting vendor is confirmed
+- Invoice Automation timing depends on accounting vendor confirmation
 
 Option B — Sequential Execution (More Controlled):
-- Weeks 4–10: Module 1 — Inquiry Response
-- Weeks 11–18: Module 3 — LOI Draft Assistant
-- Module 2: Starts after vendor confirmation
+- Weeks 4–10: Phase 1 — AI Inquiry Response
+- Weeks 11–18: Phase 2 — LOI Draft Assistant
+- Phase 3 — Invoice Automation: after vendor confirmation
 
 Sprint delivery model:
 - Focused 2-week development cycles
@@ -215,47 +236,50 @@ Sprint delivery model:
 
 == NEXT STEPS ==
 
-1. Accounting vendor clarity: Karolyn to confirm vendor selection — this unblocks Module 2 scoping and architecture
-2. NDA execution: Enables more detailed technical discussions
+1. Accounting vendor clarity: Karolyn to confirm vendor selection after pending calls — this unblocks Module 2 final scoping and architecture
+2. NDA execution: Enables more detailed technical discussions about Retail Insite's systems and data
 3. Contract signature & kickoff: Platform foundation work (Weeks 1–3) starts immediately after signing
 
-Modules ready to build now:
-- ✅ AI Inquiry Response (Module 1): Ready
-- ✅ LOI Draft Assistant (Module 3): Ready
-- ⏳ Invoice Automation (Module 2): Pending accounting vendor confirmation
+Build readiness:
+- AI Inquiry Response (Module 1): Ready
+- LOI Draft Assistant (Module 3): Ready
+- Invoice Automation (Module 2): Pending accounting vendor confirmation
 
 
 == COMMON QUESTIONS ==
 
 Q: Will the AI send emails automatically?
-A: No. In the initial phase, the AI drafts the response and the broker reviews, edits, and approves before sending. There is a planned 2–3 month feedback loop before any auto-send capability is even considered.
+A: No. Initial rollout is draft-first. Brokers review and approve before sending. Auto-send is only considered after a 2–3 month feedback loop.
 
-Q: Will invoices be posted automatically to QuickBooks?
-A: No. Finance approval is required before anything is posted to the accounting system. A full audit log is maintained. Nothing touches the books without a human sign-off.
+Q: Will invoices be posted automatically?
+A: No. Finance approves before any posting to the accounting platform. Audit logs and reconciliation notes are maintained throughout.
 
-Q: Do brokers need to change how they work?
-A: No, intentionally. Module 1 works through Outlook. Module 3 supports the existing handwriting workflow — brokers still print and mark up documents; the AI handles digitization and the first draft. The solution is designed to minimize behavior change.
+Q: Do brokers need to change their workflow?
+A: No. The system is designed to minimize behavior change. Inquiry responses happen inside Outlook (via an Outlook add-in — brokers never leave their inbox). LOI drafting supports the existing handwriting workflow, plus a new voice dictation option for brokers who prefer it.
 
-Q: What systems does this connect to?
-A: Outlook and Dynamics CRM are core. The accounting integration depends on the vendor selected (QuickBooks or an alternative like Ramp). Property data comes from the Retail Insite website and CRM.
+Q: What accounting system will be used?
+A: QuickBooks or an equivalent platform depending on vendor selection. The system is built to flex — the accounting integration layer means that if Retail Insite moves to Ramp or another platform, only the connector changes. The core logic stays the same.
 
-Q: Why is Module 2 (invoicing) on hold?
-A: Retail Insite is switching accounting service providers. The architecture depends on which platform the new vendor uses. Once Karolyn confirms the vendor, Intuitio Labs can finalize scope and architecture. The $22,508 figure is a placeholder.
-
-Q: Can all three modules be built at the same time?
-A: Yes — the shared platform foundation (Weeks 1–3) supports all three. After that, Modules 1 and 3 can start in parallel (Option A) or sequentially (Option B). Module 2 waits on vendor confirmation.
+Q: What are the two LOI input methods?
+A: Handwritten OCR (broker uploads a scan of their marked-up document; system extracts annotations and generates a draft) and Voice Dictation (broker records voice instructions alongside the document; speech-to-text converts them into structured updates and generates a revised draft).
 
 Q: What is the total investment?
-A: Approximately $73,000 across all three modules. Module 1 is $18,292, Module 3 is $16,660, and Module 2 is $22,508 (placeholder pending vendor confirmation).
+A: Approximately $86,000. This breaks down as: Platform Foundation $15,980 + Module 1 (Inquiry Response) $18,292 + Module 2 (Invoice Automation) $22,508 + Module 3 (LOI Draft Assistant) $29,376 = $86,156.
+
+Q: Why did the LOI module cost increase?
+A: The updated estimate (432 hours | $29,376) reflects the addition of voice dictation as a second input method alongside handwritten OCR, plus document export capabilities (PDF and DOCX). The earlier estimate only covered OCR-based input.
+
+Q: Why is Module 2 (invoicing) on hold?
+A: Retail Insite is switching accounting service providers. The architecture depends on which platform the new vendor uses. Once Karolyn confirms the vendor, Intuitio Labs can finalize scope and architecture. The current estimate ($22,508) is confirmed; only the connector integration layer is subject to minor adjustment.
+
+Q: Can all three modules be built at the same time?
+A: Yes — the shared platform foundation (Weeks 1–3) supports all three. After that, all modules can start in parallel (Option A, faster) or sequentially (Option B, more controlled). Module 2 timing depends on vendor confirmation.
 
 Q: How do weekly updates work?
 A: Intuitio Labs sends a written update before every weekly sync. If everything is clear, the call is optional and capped at 30 minutes. Intuitio Labs never reads slides on a call.
 
 Q: What is an operations console and do we need one?
 A: A central dashboard where all AI-generated drafts can be reviewed and approved in one place. The recommendation is to start without it and add it later once adoption is established.
-
-Q: What determines when invoice automation starts?
-A: Accounting vendor selection and the resulting architecture decisions.
 
 Q: Who do I contact to move forward?
 A: Reach out to Deep Kalina at deep.kalina@intuitiolabs.com to discuss next steps, finalize scope, and begin the engagement.
