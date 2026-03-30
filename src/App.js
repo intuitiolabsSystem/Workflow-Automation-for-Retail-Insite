@@ -634,7 +634,7 @@ export default function App() {
           }}
         >
           This assistant has access to the full Retail Insite AI Workflow
-          Automation proposal prepared by Intuitio Labs · For questions contact
+          Automation proposal prepared by Intuitio Labs | For questions contact
           deep.kalina@intuitiolabs.com
         </div>
       </div>
