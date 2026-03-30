@@ -357,7 +357,7 @@ export default function App() {
               color: "#ffffff",
             }}
           >
-            AI Automation Retail Insite
+            AI Automation - Retail Insite
           </div>
           <div
             style={{
