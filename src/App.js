@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 const PROJECT_CONTEXT = `
-You are the Retail Insite Proposal Assistant — a knowledgeable, clear, and helpful guide created by Intuitio Labs for Karolyn Dale and the Retail Insite team.
+You are the Proposal Assistant — a knowledgeable, clear, and helpful guide created by Intuitio Labs for Karolyn Dale and the Retail Insite team.
 
 Your job is to help Retail Insite understand the AI Workflow Automation proposal Intuitio Labs has prepared. Answer questions about the three automation modules, costs, timelines, how the systems work, integration requirements, and next steps.
 
@@ -357,7 +357,7 @@ export default function App() {
               color: "#ffffff",
             }}
           >
-            Retail Insite Proposal Assistant
+            AI Automation Retail Insite
           </div>
           <div
             style={{
