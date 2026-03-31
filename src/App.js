@@ -241,9 +241,9 @@ Sprint delivery model:
 3. Contract signature & kickoff: Platform foundation work (Weeks 1–3) starts immediately after signing
 
 Build readiness:
-- AI Inquiry Response (Module 1): Ready
-- LOI Draft Assistant (Module 3): Ready
-- Invoice Automation (Module 2): Pending accounting vendor confirmation
+- ✅ AI Inquiry Response (Module 1): Ready
+- ✅ LOI Draft Assistant (Module 3): Ready
+- ⏳ Invoice Automation (Module 2): Pending accounting vendor confirmation
 
 
 == COMMON QUESTIONS ==
@@ -265,9 +265,6 @@ A: Handwritten OCR (broker uploads a scan of their marked-up document; system ex
 
 Q: What is the total investment?
 A: Approximately $86,000. This breaks down as: Platform Foundation $15,980 + Module 1 (Inquiry Response) $18,292 + Module 2 (Invoice Automation) $22,508 + Module 3 (LOI Draft Assistant) $29,376 = $86,156.
-
-Q: Why did the LOI module cost increase?
-A: The updated estimate (432 hours | $29,376) reflects the addition of voice dictation as a second input method alongside handwritten OCR, plus document export capabilities (PDF and DOCX). The earlier estimate only covered OCR-based input.
 
 Q: Why is Module 2 (invoicing) on hold?
 A: Retail Insite is switching accounting service providers. The architecture depends on which platform the new vendor uses. Once Karolyn confirms the vendor, Intuitio Labs can finalize scope and architecture. The current estimate ($22,508) is confirmed; only the connector integration layer is subject to minor adjustment.
